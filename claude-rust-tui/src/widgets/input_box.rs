@@ -27,22 +27,45 @@ impl<'a> Widget for InputBox<'a> {
             InputMode::Normal => (" NORMAL ", theme::GOLD),
         };
 
-        let border_color = if self.focused { theme::PINE } else { theme::HL_MED };
+        let border_color = if !self.focused {
+            theme::HL_MED
+        } else {
+            match self.state.mode {
+                InputMode::Insert => theme::PINE,
+                InputMode::Normal => theme::GOLD,
+            }
+        };
 
         let block = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(border_color))
-            .title(Span::styled(mode_label, Style::default().fg(mode_color).add_modifier(Modifier::BOLD)));
+            .title(Span::styled(
+                mode_label,
+                Style::default()
+                    .fg(mode_color)
+                    .add_modifier(Modifier::BOLD),
+            ));
 
         let display = self.state.get_display_text();
         let text = if display.is_empty() && self.state.suggestion.is_empty() {
-            Line::from(Span::styled("Type a message...", Style::default().fg(theme::MUTED)))
+            Line::from(Span::styled(
+                "Type a message or /help...",
+                Style::default().fg(theme::MUTED),
+            ))
         } else if self.state.suggestion.is_empty() {
-            Line::from(Span::styled(display, Style::default().fg(theme::TEXT)))
+            Line::from(Span::styled(
+                display,
+                Style::default().fg(theme::TEXT),
+            ))
         } else {
             Line::from(vec![
                 Span::styled(display, Style::default().fg(theme::TEXT)),
-                Span::styled(self.state.suggestion.clone(), Style::default().fg(theme::MUTED).add_modifier(Modifier::DIM)),
+                Span::styled(
+                    self.state.suggestion.clone(),
+                    Style::default()
+                        .fg(theme::MUTED)
+                        .add_modifier(Modifier::DIM),
+                ),
             ])
         };
 
@@ -55,7 +78,15 @@ impl<'a> Widget for InputBox<'a> {
             let cursor_x = area.x + 1 + self.state.cursor_pos as u16;
             let cursor_y = area.y + 1;
             if cursor_x < area.x + area.width - 1 {
-                buf[(cursor_x, cursor_y)].set_style(Style::default().bg(theme::HL_HIGH).fg(theme::TEXT));
+                let cursor_style = match self.state.mode {
+                    InputMode::Insert => {
+                        Style::default().bg(theme::FOAM).fg(theme::BASE)
+                    }
+                    InputMode::Normal => {
+                        Style::default().bg(theme::GOLD).fg(theme::BASE)
+                    }
+                };
+                buf[(cursor_x, cursor_y)].set_style(cursor_style);
             }
         }
     }

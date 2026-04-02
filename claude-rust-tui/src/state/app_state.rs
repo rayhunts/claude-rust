@@ -94,7 +94,7 @@ impl AppState {
                     if let Some(t) = m.tool_uses.iter_mut().rev()
                         .find(|t| t.name == name && t.status == ToolUseStatus::Running) {
                         t.status = if is_error { ToolUseStatus::Error } else { ToolUseStatus::Completed };
-                        t.output_preview = output.lines().next().unwrap_or("").chars().take(80).collect();
+                        t.output_preview = output.lines().next().unwrap_or("").chars().take(120).collect();
                     }
                 }
             }

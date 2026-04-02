@@ -85,6 +85,14 @@ impl InputState {
         }
     }
 
+    pub fn delete_word_back(&mut self) {
+        let end = self.cursor_pos;
+        self.move_word_left();
+        if self.cursor_pos < end {
+            self.buffer.drain(self.cursor_pos..end);
+        }
+    }
+
     pub fn move_word_left(&mut self) {
         let s = &self.buffer[..self.cursor_pos];
         let trimmed = s.trim_end_matches(|c: char| !c.is_alphanumeric());
