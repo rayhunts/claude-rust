@@ -29,12 +29,12 @@ impl CostDisplay {
 impl Widget for CostDisplay {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let line = Line::from(vec![
-            Span::styled("In: ", Style::default().fg(theme::MUTED)),
-            Span::styled(Self::format_tokens(self.input_tokens), Style::default().fg(theme::FOAM)),
-            Span::styled("  Out: ", Style::default().fg(theme::MUTED)),
-            Span::styled(Self::format_tokens(self.output_tokens), Style::default().fg(theme::FOAM)),
-            Span::styled("  Cost: ", Style::default().fg(theme::MUTED)),
-            Span::styled(format!("${:.4}", self.cost), Style::default().fg(theme::GOLD)),
+            Span::styled("In: ", Style::default().fg(theme::muted())),
+            Span::styled(Self::format_tokens(self.input_tokens), Style::default().fg(theme::foam())),
+            Span::styled("  Out: ", Style::default().fg(theme::muted())),
+            Span::styled(Self::format_tokens(self.output_tokens), Style::default().fg(theme::foam())),
+            Span::styled("  Cost: ", Style::default().fg(theme::muted())),
+            Span::styled(format!("${:.4}", self.cost), Style::default().fg(theme::gold())),
         ]);
         Paragraph::new(line).render(area, buf);
     }

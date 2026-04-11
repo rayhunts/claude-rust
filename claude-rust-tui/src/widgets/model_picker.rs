@@ -38,20 +38,19 @@ impl<'a> Widget for ModelPicker<'a> {
         Clear.render(dialog, buf);
 
         let block = Block::default()
-            .title(Span::styled(" Select Model ", Style::default().fg(theme::IRIS).add_modifier(Modifier::BOLD)))
+            .title(Span::styled(" Select Model ", Style::default().fg(theme::iris()).add_modifier(Modifier::BOLD)))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(theme::IRIS))
-            .style(Style::default().bg(theme::SURFACE));
+            .border_style(Style::default().fg(theme::iris()))
+            .style(Style::default().bg(theme::surface()));
 
         let items: Vec<ListItem<'_>> = self.options.iter().enumerate().map(|(i, opt)| {
             let (prefix, style) = if i == self.selected {
-                ("› ", Style::default().fg(theme::BASE).bg(theme::IRIS).add_modifier(Modifier::BOLD))
+                ("› ", Style::default().fg(theme::base()).bg(theme::iris()).add_modifier(Modifier::BOLD))
             } else {
-                ("  ", Style::default().fg(theme::TEXT))
+                ("  ", Style::default().fg(theme::text()))
             };
             ListItem::new(Line::from(Span::styled(format!("{prefix}{opt}"), style)))
         }).collect();
-
         List::new(items).block(block).render(dialog, buf);
     }
 }

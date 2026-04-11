@@ -18,6 +18,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use crossterm::{
     execute,
+    event::{DisableMouseCapture, EnableMouseCapture},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{Terminal, backend::CrosstermBackend};
@@ -32,7 +33,7 @@ impl TuiApp {
     pub fn new() -> io::Result<Self> {
         enable_raw_mode()?;
         let mut stdout = io::stdout();
-        execute!(stdout, EnterAlternateScreen)?;
+        execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
         let backend = CrosstermBackend::new(stdout);
         let terminal = Terminal::new(backend)?;
         Ok(Self { terminal, state: AppState::new(), in_alt: true })
@@ -47,7 +48,7 @@ impl TuiApp {
     pub fn leave_alt(&mut self) {
         if self.in_alt {
             disable_raw_mode().ok();
-            execute!(self.terminal.backend_mut(), LeaveAlternateScreen).ok();
+            execute!(self.terminal.backend_mut(), DisableMouseCapture, LeaveAlternateScreen).ok();
             self.in_alt = false;
         }
     }
@@ -55,7 +56,7 @@ impl TuiApp {
     pub fn enter_alt(&mut self) {
         if !self.in_alt {
             enable_raw_mode().ok();
-            execute!(self.terminal.backend_mut(), EnterAlternateScreen).ok();
+            execute!(self.terminal.backend_mut(), EnterAlternateScreen, EnableMouseCapture).ok();
             self.terminal.clear().ok();
             self.in_alt = true;
         }

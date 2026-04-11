@@ -32,13 +32,13 @@ impl Widget for Banner {
         for art_line in BANNER_ART {
             lines.push(Line::from(Span::styled(
                 *art_line,
-                Style::default().fg(theme::PINE).add_modifier(Modifier::BOLD),
+                Style::default().fg(theme::pine()).add_modifier(Modifier::BOLD),
             )));
         }
         lines.push(Line::from(""));
         lines.push(Line::from(Span::styled(
             format!("v{}", env!("CARGO_PKG_VERSION")),
-            Style::default().fg(theme::MUTED),
+            Style::default().fg(theme::muted()),
         )));
         Paragraph::new(lines).alignment(Alignment::Center).render(area, buf);
     }

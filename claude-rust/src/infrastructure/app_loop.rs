@@ -73,6 +73,7 @@ pub async fn run_loop(
         Err(e) => { eprintln!("TUI init failed: {e}"); return; }
     };
     tui.state.model_name = model_id.clone();
+    tui.state.model_is_default = config.model.is_none();
     tui.state.git_branch = super::terminal::git_branch();
     tui.state.conversation.messages = conv_to_tui(&conversation);
     set_current_model(&model_id);
@@ -141,6 +142,8 @@ pub async fn run_loop(
                             Some(CommandAction::Quit) => { stop.store(true, Ordering::Relaxed); break; }
                             Some(CommandAction::Continue) | None => {}
                         }
+                        tui.state.model_name = provider.model_name();
+                        tui.state.model_is_default = false;
                     } else {
                         let expanded = expand_with_pins(&trimmed, &pinned_files);
                         engine_task = spawn_engine(&expanded, &mut conversation, &mut tui, &engine, &total_input, &total_output);

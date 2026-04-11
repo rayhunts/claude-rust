@@ -38,10 +38,10 @@ impl<'a> Widget for PermissionDialog<'a> {
         Clear.render(dialog, buf);
 
         let block = Block::default()
-            .title(Span::styled(" Permission Required ", Style::default().fg(theme::LOVE).add_modifier(Modifier::BOLD)))
+            .title(Span::styled(" Permission Required ", Style::default().fg(theme::love()).add_modifier(Modifier::BOLD)))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(theme::LOVE))
-            .style(Style::default().bg(theme::SURFACE));
+            .border_style(Style::default().fg(theme::love()))
+            .style(Style::default().bg(theme::surface()));
 
         let inner = block.inner(dialog);
         block.render(dialog, buf);
@@ -53,22 +53,22 @@ impl<'a> Widget for PermissionDialog<'a> {
         ]).split(inner);
 
         Paragraph::new(Line::from(vec![
-            Span::styled("Tool: ", Style::default().fg(theme::MUTED)),
-            Span::styled(self.tool_name, Style::default().fg(theme::FOAM).add_modifier(Modifier::BOLD)),
+            Span::styled("Tool: ", Style::default().fg(theme::muted())),
+            Span::styled(self.tool_name, Style::default().fg(theme::foam()).add_modifier(Modifier::BOLD)),
         ])).render(chunks[0], buf);
 
         Paragraph::new(self.description)
-            .style(Style::default().fg(theme::TEXT))
+            .style(Style::default().fg(theme::text()))
             .wrap(Wrap { trim: true })
             .render(chunks[1], buf);
 
         Paragraph::new(Line::from(vec![
-            Span::styled("[Y]", Style::default().fg(theme::FOAM).add_modifier(Modifier::BOLD)),
-            Span::styled("es  ", Style::default().fg(theme::SUBTLE)),
-            Span::styled("[N]", Style::default().fg(theme::LOVE).add_modifier(Modifier::BOLD)),
-            Span::styled("o  ", Style::default().fg(theme::SUBTLE)),
-            Span::styled("[A]", Style::default().fg(theme::GOLD).add_modifier(Modifier::BOLD)),
-            Span::styled("lways", Style::default().fg(theme::SUBTLE)),
+            Span::styled("[Y]", Style::default().fg(theme::foam()).add_modifier(Modifier::BOLD)),
+            Span::styled("es  ", Style::default().fg(theme::subtle())),
+            Span::styled("[N]", Style::default().fg(theme::love()).add_modifier(Modifier::BOLD)),
+            Span::styled("o  ", Style::default().fg(theme::subtle())),
+            Span::styled("[A]", Style::default().fg(theme::gold()).add_modifier(Modifier::BOLD)),
+            Span::styled("lways", Style::default().fg(theme::subtle())),
         ])).alignment(Alignment::Center).render(chunks[2], buf);
     }
 }

@@ -33,26 +33,26 @@ fn parse_inline(text: &str) -> Vec<Span<'static>> {
             while i < chars.len() && !(i + 1 < chars.len() && chars[i] == '*' && chars[i+1] == '*') {
                 buf.push(chars[i]); i += 1;
             }
-            spans.push(Span::styled(std::mem::take(&mut buf), Style::default().fg(theme::ROSE).add_modifier(Modifier::BOLD)));
+            spans.push(Span::styled(std::mem::take(&mut buf), Style::default().fg(theme::rose()).add_modifier(Modifier::BOLD)));
             i += 2;
         } else if chars[i] == '`' {
             if !buf.is_empty() { spans.push(Span::raw(std::mem::take(&mut buf))); }
             i += 1;
             while i < chars.len() && chars[i] != '`' { buf.push(chars[i]); i += 1; }
-            spans.push(Span::styled(std::mem::take(&mut buf), Style::default().fg(theme::FOAM).add_modifier(Modifier::BOLD)));
+            spans.push(Span::styled(std::mem::take(&mut buf), Style::default().fg(theme::foam()).add_modifier(Modifier::BOLD)));
             if i < chars.len() { i += 1; }
         } else if chars[i] == '*' || chars[i] == '_' {
             let delim = chars[i];
             if !buf.is_empty() { spans.push(Span::raw(std::mem::take(&mut buf))); }
             i += 1;
             while i < chars.len() && chars[i] != delim { buf.push(chars[i]); i += 1; }
-            spans.push(Span::styled(std::mem::take(&mut buf), Style::default().fg(theme::SUBTLE).add_modifier(Modifier::ITALIC)));
+            spans.push(Span::styled(std::mem::take(&mut buf), Style::default().fg(theme::subtle()).add_modifier(Modifier::ITALIC)));
             if i < chars.len() { i += 1; }
         } else {
             buf.push(chars[i]); i += 1;
         }
     }
-    if !buf.is_empty() { spans.push(Span::styled(buf, Style::default().fg(theme::TEXT))); }
+    if !buf.is_empty() { spans.push(Span::styled(buf, Style::default().fg(theme::text()))); }
     spans
 }
 
@@ -77,45 +77,47 @@ fn render_table_row(raw: &str) -> Line<'static> {
     let mut spans = vec![Span::styled("  ", Style::default())];
     for (i, cell) in cells.iter().enumerate() {
         if i > 0 {
-            spans.push(Span::styled(" │ ", Style::default().fg(theme::OVERLAY)));
+            spans.push(Span::styled(" │ ", Style::default().fg(theme::overlay())));
         }
         let trimmed = cell.trim().to_string();
-        spans.push(Span::styled(trimmed, Style::default().fg(theme::TEXT)));
+        spans.push(Span::styled(trimmed, Style::default().fg(theme::text())));
     }
     Line::from(spans)
 }
 
-fn render_md_line(raw: &str, in_code: bool) -> Line<'static> {
+fn hr_line(width: u16) -> String {
+    let w = (width as usize).saturating_sub(4).max(10);
+    format!("  {}", "─".repeat(w))
+}
+
+fn render_md_line(raw: &str, in_code: bool, width: u16) -> Line<'static> {
     let trimmed = raw.trim_end();
     if in_code {
         return Line::from(vec![
-            Span::styled("  │ ", Style::default().fg(theme::OVERLAY)),
-            Span::styled(trimmed.to_string(), Style::default().fg(theme::GOLD)),
+            Span::styled("  │ ", Style::default().fg(theme::overlay())),
+            Span::styled(trimmed.to_string(), Style::default().fg(theme::gold())),
         ]);
     }
     if is_hr(trimmed) {
-        return Line::from(Span::styled(
-            "  ────────────────────────────────────────",
-            Style::default().fg(theme::OVERLAY),
-        ));
+        return Line::from(Span::styled(hr_line(width), Style::default().fg(theme::overlay())));
     }
     if is_table_sep(trimmed) {
         return Line::from(Span::styled(
-            "  ─────────────────────────────────────────",
-            Style::default().fg(theme::OVERLAY).add_modifier(Modifier::DIM),
+            hr_line(width),
+            Style::default().fg(theme::overlay()).add_modifier(Modifier::DIM),
         ));
     }
     if is_table_row(trimmed) {
         return render_table_row(trimmed);
     }
     if let Some(r) = trimmed.strip_prefix("### ") {
-        return Line::from(Span::styled(format!("  {r}"), Style::default().fg(theme::FOAM).add_modifier(Modifier::BOLD)));
+        return Line::from(Span::styled(format!("  {r}"), Style::default().fg(theme::foam()).add_modifier(Modifier::BOLD)));
     }
     if let Some(r) = trimmed.strip_prefix("## ") {
-        return Line::from(Span::styled(format!("  {r}"), Style::default().fg(theme::ROSE).add_modifier(Modifier::BOLD)));
+        return Line::from(Span::styled(format!("  {r}"), Style::default().fg(theme::rose()).add_modifier(Modifier::BOLD)));
     }
     if let Some(r) = trimmed.strip_prefix("# ") {
-        return Line::from(Span::styled(format!("  {r}"), Style::default().fg(theme::GOLD).add_modifier(Modifier::BOLD)));
+        return Line::from(Span::styled(format!("  {r}"), Style::default().fg(theme::gold()).add_modifier(Modifier::BOLD)));
     }
     let (pre, body) = if let Some(r) = trimmed.strip_prefix("- ").or_else(|| trimmed.strip_prefix("* ")) {
         ("  • ".to_string(), r)
@@ -126,14 +128,13 @@ fn render_md_line(raw: &str, in_code: bool) -> Line<'static> {
     } else {
         ("  ".to_string(), trimmed)
     };
-    let mut spans = vec![Span::styled(pre, Style::default().fg(theme::PINE))];
+    let mut spans = vec![Span::styled(pre, Style::default().fg(theme::pine()))];
     spans.extend(parse_inline(body));
     Line::from(spans)
 }
 
 impl<'a> Widget for MessageList<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let area = Rect { y: area.y + 1, height: area.height.saturating_sub(1), ..area };
         let mut lines: Vec<Line<'static>> = Vec::new();
 
         for msg in &self.state.messages {
@@ -142,11 +143,11 @@ impl<'a> Widget for MessageList<'a> {
                     for (i, raw) in msg.content.lines().enumerate() {
                         let line = if i == 0 {
                             Line::from(vec![
-                                Span::styled("  ❯ ", Style::default().fg(theme::FOAM).add_modifier(Modifier::BOLD)),
-                                Span::styled(raw.trim_end().to_string(), Style::default().fg(theme::TEXT)),
+                                Span::styled("  ❯ ", Style::default().fg(theme::foam()).add_modifier(Modifier::BOLD)),
+                                Span::styled(raw.trim_end().to_string(), Style::default().fg(theme::text())),
                             ])
                         } else {
-                            Line::from(Span::styled(format!("    {}", raw.trim_end()), Style::default().fg(theme::TEXT)))
+                            Line::from(Span::styled(format!("    {}", raw.trim_end()), Style::default().fg(theme::text())))
                         };
                         lines.push(line);
                     }
@@ -155,11 +156,11 @@ impl<'a> Widget for MessageList<'a> {
                     for (i, raw) in msg.content.lines().enumerate() {
                         let line = if i == 0 {
                             Line::from(vec![
-                                Span::styled("  ✗ ", Style::default().fg(theme::LOVE).add_modifier(Modifier::BOLD)),
-                                Span::styled(raw.trim_end().to_string(), Style::default().fg(theme::LOVE)),
+                                Span::styled("  ✗ ", Style::default().fg(theme::love()).add_modifier(Modifier::BOLD)),
+                                Span::styled(raw.trim_end().to_string(), Style::default().fg(theme::love())),
                             ])
                         } else {
-                            Line::from(Span::styled(format!("    {}", raw.trim_end()), Style::default().fg(theme::LOVE)))
+                            Line::from(Span::styled(format!("    {}", raw.trim_end()), Style::default().fg(theme::love())))
                         };
                         lines.push(line);
                     }
@@ -168,7 +169,7 @@ impl<'a> Widget for MessageList<'a> {
                     for raw in msg.content.lines() {
                         lines.push(Line::from(Span::styled(
                             format!("  · {}", raw.trim_end()),
-                            Style::default().fg(theme::MUTED).add_modifier(Modifier::ITALIC),
+                            Style::default().fg(theme::muted()).add_modifier(Modifier::ITALIC),
                         )));
                     }
                 }
@@ -181,9 +182,9 @@ impl<'a> Widget for MessageList<'a> {
                             &think_lines[..]
                         };
                         let label = if msg.is_streaming { "  ◈ thinking..." } else { "  ◈ thinking" };
-                        lines.push(Line::from(Span::styled(label, Style::default().fg(theme::MUTED).add_modifier(Modifier::ITALIC))));
+                        lines.push(Line::from(Span::styled(label, Style::default().fg(theme::muted()).add_modifier(Modifier::ITALIC))));
                         for raw in show_lines {
-                            lines.push(Line::from(Span::styled(format!("    {}", raw.trim_end()), Style::default().fg(theme::MUTED).add_modifier(Modifier::DIM))));
+                            lines.push(Line::from(Span::styled(format!("    {}", raw.trim_end()), Style::default().fg(theme::muted()).add_modifier(Modifier::DIM))));
                         }
                     }
                     let mut in_code = false;
@@ -202,27 +203,27 @@ impl<'a> Widget for MessageList<'a> {
 
                         if trimmed_start.starts_with("```mermaid") {
                             in_mermaid = true; in_code = true;
-                            lines.push(Line::from(Span::styled("  ╭─ mermaid ", Style::default().fg(theme::IRIS).add_modifier(Modifier::BOLD))));
+                            lines.push(Line::from(Span::styled("  ╭─ mermaid ", Style::default().fg(theme::iris()).add_modifier(Modifier::BOLD))));
                         } else if in_mermaid && trimmed_start.starts_with("```") {
                             in_mermaid = false; in_code = false;
-                            lines.push(Line::from(Span::styled("  ╰────────── ", Style::default().fg(theme::IRIS))));
+                            lines.push(Line::from(Span::styled("  ╰────────── ", Style::default().fg(theme::iris()))));
                         } else if in_mermaid {
                             lines.push(Line::from(vec![
-                                Span::styled("  │ ", Style::default().fg(theme::IRIS)),
-                                Span::styled(raw.trim_end().to_string(), Style::default().fg(theme::GOLD)),
+                                Span::styled("  │ ", Style::default().fg(theme::iris())),
+                                Span::styled(raw.trim_end().to_string(), Style::default().fg(theme::gold())),
                             ]));
                         } else if trimmed_start.starts_with("```") {
                             if in_code {
                                 in_code = false;
-                                lines.push(Line::from(Span::styled("  ╰──", Style::default().fg(theme::OVERLAY))));
+                                lines.push(Line::from(Span::styled("  ╰──", Style::default().fg(theme::overlay()))));
                             } else {
                                 in_code = true;
                                 let lang = trimmed_start.trim_start_matches('`').trim();
                                 let label = if lang.is_empty() { "  ╭─ code".to_string() } else { format!("  ╭─ {lang}") };
-                                lines.push(Line::from(Span::styled(label, Style::default().fg(theme::OVERLAY).add_modifier(Modifier::DIM))));
+                                lines.push(Line::from(Span::styled(label, Style::default().fg(theme::overlay()).add_modifier(Modifier::DIM))));
                             }
                         } else {
-                            lines.push(render_md_line(raw, in_code));
+                            lines.push(render_md_line(raw, in_code, area.width));
                         }
                     }
                     let _ = in_code;
@@ -233,17 +234,17 @@ impl<'a> Widget for MessageList<'a> {
                                 let cap = tool.name.chars().next()
                                     .map(|c| c.to_uppercase().to_string() + &tool.name[c.len_utf8()..])
                                     .unwrap_or_else(|| tool.name.clone());
-                                (ch, format!("{cap}..."), theme::GOLD)
+                                (ch, format!("{cap}..."), theme::gold())
                             }
-                            ToolUseStatus::Completed => ("✓".into(), tool.name.clone(), theme::FOAM),
-                            ToolUseStatus::Error     => ("✗".into(), tool.name.clone(), theme::LOVE),
+                            ToolUseStatus::Completed => ("✓".into(), tool.name.clone(), theme::foam()),
+                            ToolUseStatus::Error     => ("✗".into(), tool.name.clone(), theme::love()),
                         };
                         let preview = if tool.output_preview.is_empty() { String::new() }
                             else { format!("  {}", tool.output_preview) };
                         lines.push(Line::from(vec![
                             Span::styled(format!("  {icon} "), Style::default().fg(col).add_modifier(Modifier::BOLD)),
                             Span::styled(name_str, Style::default().fg(col).add_modifier(Modifier::ITALIC)),
-                            Span::styled(preview, Style::default().fg(theme::MUTED).add_modifier(Modifier::DIM)),
+                            Span::styled(preview, Style::default().fg(theme::muted()).add_modifier(Modifier::DIM)),
                         ]));
                     }
                 }
@@ -251,7 +252,6 @@ impl<'a> Widget for MessageList<'a> {
             lines.push(Line::from(""));
         }
 
-        lines.push(Line::from(""));
         lines.push(Line::from(""));
 
         let total = lines.len();

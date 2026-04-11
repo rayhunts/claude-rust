@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -6,6 +8,8 @@ pub struct Settings {
     pub permissions: PermissionSettings,
     #[serde(default)]
     pub model: Option<String>,
+    #[serde(default)]
+    pub env: HashMap<String, String>,
     #[serde(default)]
     pub hooks: HooksConfig,
     #[serde(default)]

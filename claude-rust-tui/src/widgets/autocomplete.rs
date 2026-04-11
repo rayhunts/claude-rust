@@ -23,17 +23,17 @@ impl<'a> Widget for AutocompleteDropdown<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let items: Vec<ListItem<'_>> = self.options.iter().enumerate().map(|(i, opt)| {
             let style = if i == self.selected {
-                Style::default().fg(theme::BASE).bg(theme::PINE).add_modifier(Modifier::BOLD)
+                Style::default().fg(theme::base()).bg(theme::pine()).add_modifier(Modifier::BOLD)
             } else {
-                Style::default().fg(theme::TEXT)
+                Style::default().fg(theme::text())
             };
             ListItem::new(Line::from(Span::styled(opt.as_str(), style)))
         }).collect();
 
         let block = Block::default()
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(theme::OVERLAY))
-            .style(Style::default().bg(theme::SURFACE));
+            .border_style(Style::default().fg(theme::overlay()))
+            .style(Style::default().bg(theme::surface()));
 
         List::new(items).block(block).render(area, buf);
     }

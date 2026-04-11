@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::Path;
 
 use claude_rust_provider::AnthropicProvider;
@@ -111,31 +112,31 @@ pub fn try_skill(input: &str, skills: &[Skill]) -> Option<CommandAction> {
     Some(CommandAction::SendToEngine(prompt, skill.allowed_tools.clone()))
 }
 
-pub fn handle_model_cmd(name: &str, provider: &AnthropicProvider, mode_flag: &std::sync::Arc<std::sync::atomic::AtomicU8>) -> Option<CommandAction> {
+pub fn handle_model_cmd(name: &str, provider: &AnthropicProvider, mode_flag: &std::sync::Arc<std::sync::atomic::AtomicU8>, env: &HashMap<String, String>) -> Option<CommandAction> {
+    let _ = mode_flag;
     if name.is_empty() {
         let current = provider.model_name();
+        let sonnet_id = claude_rust_config::resolve_model_tier("sonnet", env);
+        let opus_id = claude_rust_config::resolve_model_tier("opus", env);
+        let haiku_id = claude_rust_config::resolve_model_tier("haiku", env);
+
         let items: Vec<(String, String)> = vec![
-            ("claude-sonnet-4-6".into(), "claude-sonnet-4-6".into()),
-            ("claude-opus-4-6".into(), "claude-opus-4-6".into()),
-            ("claude-haiku-4-5-20251001".into(), "claude-haiku-4-5-20251001".into()),
-            ("claude-sonnet-4-5-20250929".into(), "claude-sonnet-4-5-20250929".into()),
+            (sonnet_id.clone(), format!("Sonnet ({sonnet_id})")),
+            (opus_id.clone(), format!("Opus ({opus_id})")),
+            (haiku_id.clone(), format!("Haiku ({haiku_id})")),
         ];
         match select_from_list("Models", &items, &current) {
             Some(selected) => {
                 provider.set_model(&selected);
+                let _ = claude_rust_config::save_model(&selected);
                 Some(CommandAction::Output(format!("\n  {DIM}Model →{RESET} {BOLD}{CYAN}{selected}{RESET}\n")))
             }
             None => Some(CommandAction::Continue),
         }
     } else {
-        let resolved = match name {
-            "opus" => "claude-opus-4-6",
-            "sonnet" => "claude-sonnet-4-6",
-            "haiku" => "claude-haiku-4-5-20251001",
-            other => other,
-        };
-        let _ = mode_flag;
-        provider.set_model(resolved);
+        let resolved = claude_rust_config::resolve_model_tier(name, env);
+        provider.set_model(&resolved);
+        let _ = claude_rust_config::save_model(&resolved);
         Some(CommandAction::Output(format!("\n  {DIM}Model →{RESET} {BOLD}{CYAN}{resolved}{RESET}\n")))
     }
 }

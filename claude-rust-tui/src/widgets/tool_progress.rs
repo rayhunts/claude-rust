@@ -29,18 +29,17 @@ impl<'a> ToolProgress<'a> {
 impl<'a> Widget for ToolProgress<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let (indicator, color) = match self.tool_use.status {
-            ToolUseStatus::Running   => (FRAMES[self.spinner_frame % FRAMES.len()], theme::GOLD),
-            ToolUseStatus::Completed => ('✓', theme::FOAM),
-            ToolUseStatus::Error     => ('✗', theme::LOVE),
+            ToolUseStatus::Running   => (FRAMES[self.spinner_frame % FRAMES.len()], theme::gold()),
+            ToolUseStatus::Completed => ('✓', theme::foam()),
+            ToolUseStatus::Error     => ('✗', theme::love()),
         };
 
         let line = Line::from(vec![
             Span::styled(format!("{indicator} "), Style::default().fg(color)),
-            Span::styled(&self.tool_use.name, Style::default().fg(theme::FOAM)),
+            Span::styled(&self.tool_use.name, Style::default().fg(theme::foam())),
             Span::raw(" "),
-            Span::styled(&self.tool_use.output_preview, Style::default().fg(theme::MUTED)),
+            Span::styled(&self.tool_use.output_preview, Style::default().fg(theme::muted())),
         ]);
-
         Paragraph::new(line).render(area, buf);
     }
 }

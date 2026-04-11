@@ -1,4 +1,4 @@
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEventKind};
 use crate::state::{AppState, InputMode};
 
 pub enum UiAction {
@@ -51,13 +51,27 @@ impl EventHandler {
     pub fn new() -> Self { Self }
 
     pub fn handle(event: Event, state: &mut AppState) -> UiAction {
-        let Event::Key(key) = event else { return UiAction::None; };
-        if key.kind != KeyEventKind::Press { return UiAction::None; }
-        if state.modal.active.is_some() { return Self::modal_key(key, state); }
-        if state.input.mode == InputMode::Normal {
-            return Self::normal_mode_key(key, state);
+        match event {
+            Event::Key(key) => {
+                if key.kind != KeyEventKind::Press { return UiAction::None; }
+                if state.modal.active.is_some() { return Self::modal_key(key, state); }
+                if state.input.mode == InputMode::Normal {
+                    return Self::normal_mode_key(key, state);
+                }
+                Self::insert_mode_key(key, state)
+            }
+            Event::Mouse(mouse) => {
+                match mouse.kind {
+                    MouseEventKind::ScrollDown => { scroll_down(state, 3); UiAction::None }
+                    MouseEventKind::ScrollUp   => { scroll_up(state, 3);   UiAction::None }
+                    _ => UiAction::None,
+                }
+            }
+            Event::Resize(_, _) => {
+                UiAction::None
+            }
+            _ => UiAction::None,
         }
-        Self::insert_mode_key(key, state)
     }
 
     fn insert_mode_key(key: KeyEvent, state: &mut AppState) -> UiAction {

@@ -39,10 +39,10 @@ impl<'a> Widget for SearchOverlay<'a> {
         Clear.render(dialog, buf);
 
         let block = Block::default()
-            .title(Span::styled(" Search History ", Style::default().fg(theme::GOLD).add_modifier(Modifier::BOLD)))
+            .title(Span::styled(" Search History ", Style::default().fg(theme::gold()).add_modifier(Modifier::BOLD)))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(theme::GOLD))
-            .style(Style::default().bg(theme::SURFACE));
+            .border_style(Style::default().fg(theme::gold()))
+            .style(Style::default().bg(theme::surface()));
 
         let inner = block.inner(dialog);
         block.render(dialog, buf);
@@ -50,20 +50,19 @@ impl<'a> Widget for SearchOverlay<'a> {
         let chunks = Layout::vertical([Constraint::Length(3), Constraint::Min(1)]).split(inner);
 
         Paragraph::new(Line::from(vec![
-            Span::styled("/ ", Style::default().fg(theme::GOLD)),
-            Span::styled(self.query, Style::default().fg(theme::TEXT)),
-        ])).block(Block::default().borders(Borders::BOTTOM).border_style(Style::default().fg(theme::HL_MED)))
+            Span::styled("/ ", Style::default().fg(theme::gold())),
+            Span::styled(self.query, Style::default().fg(theme::text())),
+        ])).block(Block::default().borders(Borders::BOTTOM).border_style(Style::default().fg(theme::hl_med())))
             .render(chunks[0], buf);
 
         let items: Vec<ListItem<'_>> = self.results.iter().enumerate().map(|(i, result)| {
             let style = if i == self.selected {
-                Style::default().fg(theme::BASE).bg(theme::GOLD).add_modifier(Modifier::BOLD)
+                Style::default().fg(theme::base()).bg(theme::gold()).add_modifier(Modifier::BOLD)
             } else {
-                Style::default().fg(theme::TEXT)
+                Style::default().fg(theme::text())
             };
             ListItem::new(Line::from(Span::styled(result.as_str(), style)))
         }).collect();
-
         List::new(items).render(chunks[1], buf);
     }
 }

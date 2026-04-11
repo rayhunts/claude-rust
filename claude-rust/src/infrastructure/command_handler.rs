@@ -14,8 +14,6 @@ use crate::infrastructure::command_usage::render_usage;
 use crate::infrastructure::skills::Skill;
 use crate::infrastructure::terminal::{BOLD, CYAN, DIM, GREEN, MAGENTA, RED, RESET, YELLOW};
 
-const FAST_MODEL: &str = "claude-haiku-4-5-20251001";
-
 #[allow(clippy::too_many_arguments)]
 pub async fn handle_slash_command(
     input: &str,
@@ -38,18 +36,22 @@ pub async fn handle_slash_command(
     let cmd = parse_command(input)?;
 
     if let SlashCommand::Model(ref name) = cmd {
-        return handle_model_cmd(name, provider, mode_flag);
+        return handle_model_cmd(name, provider, mode_flag, &config.env);
     }
 
     if matches!(cmd, SlashCommand::Fast) {
         let current = provider.model_name();
-        if current.contains("haiku") {
-            let restore = config.model.as_deref().unwrap_or("claude-sonnet-4-6");
+        let haiku = claude_rust_config::resolve_model_tier("haiku", &config.env);
+        let sonnet = claude_rust_config::resolve_model_tier("sonnet", &config.env);
+        if current == haiku {
+            let restore = config.model.as_deref().unwrap_or(&sonnet);
             provider.set_model(restore);
+            let _ = claude_rust_config::save_model(restore);
             return Some(CommandAction::Output(format!("\n  {DIM}Fast mode off →{RESET} {BOLD}{CYAN}{restore}{RESET}\n")));
         } else {
-            provider.set_model(FAST_MODEL);
-            return Some(CommandAction::Output(format!("\n  {CYAN}{BOLD}⚡ Fast mode on →{RESET} {BOLD}{CYAN}{FAST_MODEL}{RESET}\n")));
+            provider.set_model(&haiku);
+            let _ = claude_rust_config::save_model(&haiku);
+            return Some(CommandAction::Output(format!("\n  {CYAN}{BOLD}⚡ Fast mode on →{RESET} {BOLD}{CYAN}{haiku}{RESET}\n")));
         }
     }
 

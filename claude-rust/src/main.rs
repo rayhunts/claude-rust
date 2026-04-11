@@ -47,8 +47,15 @@ async fn main() {
     let mode_flag = Arc::new(AtomicU8::new(PermissionMode::Normal as u8));
     let provider = Arc::new(AnthropicProvider::new(credential, mode_flag.clone()));
 
+    // Apply env-configured default from settings.json env section
+    let env_default = claude_rust_config::default_model(&config.env);
+    provider.set_model(&env_default);
+
+    // Explicit model in settings.json overrides env default
+    if let Some(ref model) = config.model { provider.set_model(model); }
+    // CLI --model flag overrides everything
     if let Some(ref model) = cli.model { provider.set_model(model); }
-    else if let Some(ref model) = config.model { provider.set_model(model); }
+    // $MODEL env var has highest priority
     if let Ok(model) = std::env::var("MODEL") { provider.set_model(&model); }
     if let Some(mt) = config.max_tokens { provider.set_max_tokens(mt); }
 

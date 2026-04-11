@@ -14,7 +14,7 @@ impl Renderer {
 
     pub fn draw(frame: &mut Frame, state: &mut AppState) {
         let full = frame.area();
-        frame.render_widget(Block::default().style(Style::default().bg(theme::BASE)), full);
+        frame.render_widget(Block::default().style(Style::default().bg(theme::base())), full);
         let [msg, inp, stat] = MainLayout::split(full);
 
         frame.render_widget(MessageList::new(&mut state.conversation, state.spinner_frame), msg);
@@ -22,6 +22,7 @@ impl Renderer {
         frame.render_widget(
             StatusBar::new(
                 &state.model_name,
+                state.model_is_default,
                 &state.permission_mode,
                 state.total_cost,
                 state.git_branch.as_deref(),

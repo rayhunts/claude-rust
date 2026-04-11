@@ -27,7 +27,7 @@ impl Widget for Spinner {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let line = Line::from(Span::styled(
             format!(" {}", self.current_char()),
-            Style::default().fg(theme::IRIS).add_modifier(Modifier::BOLD),
+            Style::default().fg(theme::iris()).add_modifier(Modifier::BOLD),
         ));
         Paragraph::new(line).render(area, buf);
     }
